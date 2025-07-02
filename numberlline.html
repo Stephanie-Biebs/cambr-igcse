@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Interactive Number Line</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    padding: 20px;
+  }
+  #numberLine {
+    position: relative;
+    width: 600px;
+    height: 80px;
+    margin: 40px auto;
+    user-select: none;
+  }
+  .line {
+    position: absolute;
+    top: 40px;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background-color: #333;
+  }
+  .tick {
+    position: absolute;
+    width: 2px;
+    height: 15px;
+    background-color: #333;
+    top: 32px;
+  }
+  .label {
+    position: absolute;
+    top: 50px;
+    font-size: 14px;
+    user-select: none;
+    transform: translateX(-50%);
+  }
+  #dragPoint {
+    position: absolute;
+    top: 25px;
+    width: 30px;
+    height: 30px;
+    background-color: #4285f4;
+    border-radius: 50%;
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.3s;
+  }
+  #dragPoint.dragging {
+    background-color: #0b59d6;
+  }
+  #selectedValue {
+    text-align: center;
+    font-size: 18px;
+    margin-top: 20px;
+  }
+</style>
+</head>
+<body>
+
+<h2 style="text-align:center;">Interactive Integer Number Line</h2>
+
+<div id="numberLine">
+  <div class="line"></div>
+  <div id="dragPoint"></div>
+</div>
+
+<div id="selectedValue">Selected integer: 0</div>
+
+<script>
+  const numberLine = document.getElementById('numberLine');
+  const dragPoint = document.getElementById('dragPoint');
+  const selectedValue = document.getElementById('selectedValue');
+
+  const min = -10;
+  const max = 10;
+  const totalTicks = max - min;
+
+  // Width in pixels of the number line container
+  const lineWidth = numberLine.clientWidth;
+
+  // Calculate the pixel distance between each integer tick
+  const tickSpacing = lineWidth / totalTicks;
+
+  // Create ticks and labels dynamically
+  for(let i = min; i <= max; i++) {
+    const tick = document.createElement('div');
+    tick.className = 'tick';
+    tick.style.left = ((i - min) * tickSpacing) + 'px';
+    numberLine.appendChild(tick);
+
+    const label = document.createElement('div');
+    label.className = 'label';
+    label.style.left = ((i - min) * tickSpacing) + 'px';
+    label.textContent = i;
+    numberLine.appendChild(label);
+  }
+
+  // Set initial position of draggable point at 0
+  let currentPos = 0;
+  function updateDragPoint(pos) {
+    // Clamp pos between min and max pixels
+    if(pos < 0) pos = 0;
+    if(pos > lineWidth) pos = lineWidth;
+
+    dragPoint.style.left = (pos - dragPoint.offsetWidth/2) + 'px';
+
+    // Calculate integer value nearest to pos
+    const value = Math.round(pos / tickSpacing) + min;
+    selectedValue.textContent = 'Selected integer: ' + value;
+    currentPos = pos;
+  }
+
+  // Initialize drag point position at 0
+  updateDragPoint((0 - min) * tickSpacing);
+
+  // Dragging logic
+  let isDragging = false;
+
+  dragPoint.addEventListener('mousedown', (e) => {
+    isDragging = true;
+    dragPoint.classList.add('dragging');
+  });
+
+  window.addEventListener('mouseup', (e) => {
+    if(isDragging) {
+      isDragging = false;
+      dragPoint.classList.remove('dragging');
+    }
+  });
+
+  window.addEventListener('mousemove', (e) => {
+    if(!isDragging) return;
+
+    // Calculate relative mouse position inside numberLine div
+    const rect = numberLine.getBoundingClientRect();
+    let pos = e.clientX - rect.left;
+
+    updateDragPoint(pos);
+  });
+
+  // Optional: make point draggable by touch on mobile devices
+  dragPoint.addEventListener('touchstart', e => {
+    isDragging = true;
+    dragPoint.classList.add('dragging');
+    e.preventDefault();
+  }, {passive:false});
+
+  window.addEventListener('touchend', e => {
+    if(isDragging) {
+      isDragging = false;
+      dragPoint.classList.remove('dragging');
+    }
+  });
+
+  window.addEventListener('touchmove', e => {
+    if(!isDragging) return;
+    const touch = e.touches[0];
+    const rect = numberLine.getBoundingClientRect();
+    let pos = touch.clientX - rect.left;
+    updateDragPoint(pos);
+  }, {passive:false});
+</script>
+
+</body>
+</html>
